@@ -1,0 +1,13 @@
+{
+  "name": "claude-committee",
+  "owner": {
+    "name": "Israel Bitton"
+  },
+  "plugins": [
+    {
+      "name": "committee",
+      "source": ".",
+      "description": "Multi-perspective expert committee reviews with curated personas, pre-built collectives, and dynamic member generation"
+    }
+  ]
+}
