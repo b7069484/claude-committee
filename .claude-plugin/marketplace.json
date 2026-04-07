@@ -6,7 +6,10 @@
   "plugins": [
     {
       "name": "committee",
-      "source": ".",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/b7069484/claude-committee.git"
+      },
       "description": "Multi-perspective expert committee reviews with curated personas, pre-built collectives, and dynamic member generation"
     }
   ]
