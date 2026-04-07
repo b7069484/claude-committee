@@ -93,7 +93,15 @@ Read `agent-mode.md` for detailed instructions on spawning subagents.
 3. **Top Recommendations:** Rank by (consensus strength × projected impact). Include agreement count, expected impact, and complexity rating (low/medium/high).
 4. **Blind Spots Acknowledged:** What this committee is NOT qualified to evaluate. What perspectives are missing. What the user should seek input on elsewhere.
 
-### Phase 6: FOLLOW-UP
+### Phase 6: SAVE REPORT
+
+After the synthesis is complete, save the ENTIRE review (individual reports + synthesized report) as a markdown file in the current project directory:
+
+1. **File path:** `./committee-review-YYYY-MM-DD-[short-topic].md` in the current working directory. Derive `[short-topic]` from the deliverable (e.g., `committee-review-2026-04-07-landing-page.md`).
+2. **Use the Write tool** to save the full report content.
+3. **Confirm to the user:** "Report saved to `[file path]`"
+
+### Phase 7: FOLLOW-UP
 
 After the review is complete, the user may:
 - Ask a specific member to elaborate on a point → re-adopt that persona and expand
