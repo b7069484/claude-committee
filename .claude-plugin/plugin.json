@@ -1,7 +1,7 @@
 {
   "name": "committee",
-  "description": "Multi-perspective expert committee reviews for Claude Code. Assemble curated expert panels or let AI generate the right reviewers for your deliverable. 26 pre-built personas, 7 ready-to-go collectives, dynamic member generation, and optional parallel agent execution.",
-  "version": "1.0.0",
+  "description": "Multi-perspective expert committee reviews for Claude Code. An Executive Assistant orchestrates the experience: assembles expert panels with blind spot detection, runs model-tiered parallel reports, facilitates optional interactive debates, and produces actionable next steps with an implementation bridge. 26 pre-built personas, 7 collectives, two review modes (Standard and Interactive), and session checkpointing.",
+  "version": "2.0.0",
   "author": {
     "name": "Israel Bitton"
   },
