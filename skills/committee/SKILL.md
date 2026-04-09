@@ -81,8 +81,22 @@ After the user selects Standard mode, the meta agent composes the committee, pre
 3. Fill dynamic slots: read `generation-guide.md`, run domain coverage mapping, generate members, validate constraints.
 4. Assign report tiers by deliverable relevance (full / focused / flag-only).
 5. Detect blind spots — include the most critical gap member(s) in the proposal.
-6. **Present the full proposed roster** grouped by tier (FULL REPORTS / FOCUSED REPORTS / FLAG-ONLY), with blind spot additions marked. Include cost estimate.
-7. **Wait for user confirmation.** User can approve, swap members, adjust tiers, or add/remove members. This is the ONLY question in standard mode.
+6. **Present the full proposed roster** grouped by tier, showing the model for each tier so users can see token cost implications:
+   ```
+   FULL REPORTS (Sonnet):
+     1. Head of Engineering, Stripe — API design, reliability
+     2. Head of AI, Meta (FAIR) — model integration, inference
+   
+   FOCUSED REPORTS (Sonnet):
+     5. Head of Product, OpenAI — competitive positioning
+   
+   FLAG-ONLY (Haiku):
+     8. Regulatory & Compliance — data handling flags
+   
+   Estimated cost: ~$0.03 sub-agent · ~18k main context tokens
+   ```
+   Include blind spot additions marked with a note.
+7. **Wait for user confirmation.** User can approve, swap members, adjust tiers, change a member's model (e.g., "use Haiku for member 5"), or add/remove members. This is the ONLY question in standard mode.
 8. Roster locked. Write `SESSION.json` checkpoint: `roster_locked`.
 
 #### Phase S2: AUTO-REPORT (No Further User Input)
@@ -119,8 +133,8 @@ After the user selects Interactive mode, the meta agent walks through each confi
 1. If a collective was specified: read from `collectives/[id].md`. If suggest: analyze context, find best match.
 2. Resolve pinned members. Fill dynamic slots (read `generation-guide.md`).
 3. Assign report tiers by deliverable relevance.
-4. **Present the roster** grouped by tier (FULL REPORTS / FOCUSED REPORTS / FLAG-ONLY) with rationale per member.
-5. **Wait for user confirmation.** User may swap members, adjust tiers, or approve.
+4. **Present the roster** grouped by tier, showing the model for each tier (same format as standard mode: `FULL REPORTS (Sonnet)`, `FLAG-ONLY (Haiku)`, etc.) with rationale per member.
+5. **Wait for user confirmation.** User may swap members, adjust tiers, change a member's model (e.g., "use Haiku for member 5"), or approve.
 6. Roster locked. Write `SESSION.json` checkpoint: `roster_locked`.
 
 #### Phase I2: BLIND SPOT DETECTION
