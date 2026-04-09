@@ -41,7 +41,7 @@ The short topic is derived from the deliverable title (lowercase, hyphens, max 3
         "model": "sonnet | haiku",
         "archetype": "<e.g. Devil's Advocate, Domain Expert, Ethicist>",
         "source": "pinned | dynamic",
-        "status": "pending | report_complete | timed_out | failed | retried"
+        "status": "pending | complete | timed_out | failed | retried"
       }
     ],
     "blind_spots_offered": ["<archetype or angle suggested but not selected>"],
@@ -67,6 +67,8 @@ The short topic is derived from the deliverable title (lowercase, hyphens, max 3
       "full_text_ref": "<inline or path reference to full report text>"
     }
   },
+
+  "running_summary": "<~200 word compressed summary of all debate activity so far, updated after each round>",
 
   "debate_rounds": [
     {

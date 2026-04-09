@@ -100,8 +100,8 @@ If interactive mode: include preliminary answers and locked agenda in each promp
 Spawn ALL member sub-agents in a single message (parallel by default). Collect reports. Check quorum (60% minimum response). Present reports grouped by tier:
 - 3.1 Full Reports
 - 3.2 Focused Reports
-- 3.3 Flag-Only Notes
-- 3.4 Blind Spot Additions
+- 3.3 Flags
+- 3.4 Unavailable Members
 
 Write `SESSION.json` checkpoint: `reports_complete`.
 
@@ -134,10 +134,10 @@ Produce a briefing only: consensus, tensions, blind spots, and proposed debate t
 Skip entirely if standard mode.
 
 Read `debate-format.md`. For each agenda topic in priority order:
-- Check for consensus fast-track (if 80%+ agreement, skip full round)
+- Check for consensus fast-track (if all relevant members agree with no dissent, present quick confirmation instead of full round)
 - Run full debate round if needed
 - Checkpoint after each round
-- Write `SESSION.json` per round: `debate_round_[N]_complete`
+- Write `SESSION.json` per round: `debate_round_N`
 
 After all rounds or user exits debate: produce FULL synthesis (same structure as standard mode, enriched with debate proceedings). Save review to `./committee-review-YYYY-MM-DD-[topic].md`. Write `SESSION.json` checkpoint: `synthesis_complete`. Proceed to Phase 3.
 

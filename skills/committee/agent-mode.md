@@ -197,7 +197,7 @@ Once all agents return:
 
 4. **Update SESSION.json** with the results and quorum status before proceeding to synthesis.
 
-5. After all reports are presented, proceed to Phase 5 (Synthesize) in the main context. Synthesis is always done by the orchestrator — never by a sub-agent.
+5. After all reports are presented, proceed to Phase 2 (Synthesis) in the main context. Synthesis is always done by the orchestrator — never by a sub-agent.
 
 ---
 

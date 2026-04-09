@@ -72,7 +72,7 @@ Each collective has pinned favorites plus dynamic slots that are filled with con
 1. Invoke `/committee review [collective]` or `/committee suggest`
 2. Executive Assistant proposes committee with tiered report assignments and blind spot detection
 3. Choose: Standard review (fast, recommended) or Interactive session (debates)
-4. Committee members generate independent reports in parallel (Sonnet/Haiku)
+4. Committee members generate independent reports in parallel
 5. Executive Assistant synthesizes: consensus, tensions, evidence, blind spots
 6. Two-path Next Steps: implement everything, or pick unanimous items and review tensions
 7. Implementation Bridge: chain directly into a plan and execution

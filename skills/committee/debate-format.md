@@ -83,7 +83,7 @@ other's positions. Maximum 2 additional rounds per topic before the meta agent f
 checkpoint regardless.
 
 **Option 2 — Add constraints or context:** User input is recorded in SESSION.json under
-`user_context` for this topic. The meta agent acknowledges it explicitly, then either
+`user_input` for this round in the `debate_rounds` array. The meta agent acknowledges it explicitly, then either
 continues the round or closes the topic based on whether the new context resolves the
 tension.
 
