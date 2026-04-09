@@ -12,7 +12,10 @@ Type `/committee` in Claude Code and get a structured review from a panel of exp
 - **Head of Marketing/Business at McKinsey** - analyzes positioning and go-to-market strategy
 - **Skeptic End User** - reacts as a jaded consumer who needs convincing
 - **Head of AI at Meta (FAIR)** - evaluates AI architecture for practical viability
-- ...and 22 more pre-built personas
+- **Head of Product at Shopify** - evaluates e-commerce and merchant experience
+- **Head of Game Design at Riot Games** - analyzes engagement and player experience
+- **Chief Medical Officer at Epic Systems** - evaluates healthcare and clinical workflows
+- ...and 48 more across every major industry
 
 Each member produces a full report with executive assessment, key issues (backed by evidence and real-world benchmarks), actionable suggestions, and a concrete counter-proposal. The synthesized report surfaces consensus points, debates tensions between disagreeing members, and ranks recommendations by impact.
 
@@ -75,15 +78,17 @@ The Executive Assistant will ask one question: **Standard or Interactive?**
 
 ## What's Included
 
-### 26 Expert Personas
+### 56 Expert Personas + Unlimited Dynamic Generation
 
-**Domain Experts (13):** Apple UX, Google Learning, McKinsey Strategy, Meta Monetization, Instagram Algorithm, Disney Pixar 3D, TED Presentations, Anthropic Claude Code, Google News/Media, Remotion three.js, Meta AI (FAIR), OpenAI Product, Google DeepMind Research
+**Domain Experts (30):** Apple UX, Google Learning, McKinsey Strategy, Meta Monetization, Instagram Algorithm, Disney Pixar 3D, TED Presentations, Anthropic Claude Code, Google News/Media, Remotion three.js, Meta AI (FAIR), OpenAI Product, Google DeepMind, Shopify Product, Shopify CTO, Riot Games Design, Epic Systems CMO, Uber Mobile, Coinbase Blockchain, Zillow PropTech, Nike Brand, Tesla Autonomous, Enphase CleanTech, Airbnb Travel, Duolingo EdTech, Plaid Fintech, Lemonade Insurance, Algolia Search, Figma Design Systems, AWS Cloud Architecture
 
-**Engineering & Security (5):** Stripe Engineering, Netflix Platform, Vercel DX, CrowdStrike Threat Intelligence, Google Security (Project Zero)
+**Engineering & Security (9):** Stripe Engineering, Netflix Platform, Vercel DX, CrowdStrike Threat Intelligence, Google Security, Databricks Data Engineering, Microsoft QA, T-Mobile Telecom, AWS Cloud
 
-**Adversarial (4):** Skeptic End User, Skeptic End Client, Devil's Advocate, Regulatory Compliance
+**Adversarial (6):** Skeptic End User, Skeptic End Client, Devil's Advocate, Regulatory Compliance, Cooley Legal, Discord Trust & Safety
 
-**Generalists & Operators (4):** Scrappy Startup Founder, Data Scientist/Metrics Lead, Accessibility Advocate, VC Partner
+**Generalists & Operators (12):** Scrappy Startup Founder, Data Scientist/Metrics, Accessibility Advocate, VC Partner, Salesforce Enterprise Sales, GitLab People Ops, Amazon Supply Chain, Twilio DevRel, Zendesk Customer Success, Toast Restaurant Tech, USDS GovTech, Notion Growth
+
+**Plus unlimited dynamic generation** — the system creates any expert you need on the fly, anchored to a real company, based on what you're reviewing.
 
 ### 7 Pre-Built Collectives
 
