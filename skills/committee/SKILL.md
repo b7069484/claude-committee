@@ -48,98 +48,129 @@ Read `meta-agent.md` before starting any review. Adopt the Executive Assistant p
 
 ---
 
-### Phase 0: INTAKE & COMPOSITION (Both Modes)
+### Phase 0: INTAKE & MODE SELECTION
 
-1. Read `meta-agent.md`, adopt the Executive Assistant persona
-2. Determine intent (review / suggest / list / add / promote / remove / custom)
-3. Read the deliverable — files via Read tool, or extract from conversation context
-4. If a collective was specified: read its file from `collectives/[id].md`
-5. If suggest: analyze context to identify what the user is building, read `collectives/_index.md`, find best match
-6. Resolve pinned members from `favorites/` for each pinned ID in the collective
-7. Fill dynamic slots: read `generation-guide.md`, run domain coverage mapping, generate members following the ~120-word template, validate against slot constraints
-8. Assign report tiers by deliverable relevance: full / focused / flag-only
-9. Detect blind spots using domain coverage mapping
-10. Display cost estimate (member count, tiers, mode)
-11. Present roster grouped by tier + blind spot additions as lettered options
-12. Wait for user confirmation — user may swap, adjust, or add members
-13. Roster locked
-14. Ask mode selection (unless `--interactive` or `--standard` flag was passed):
-    - "1. Standard [recommended]  2. Interactive"
-15. Mode locked
-16. Write `SESSION.json` checkpoint: `composition_complete` (see `session-schema.md` for schema)
+This is the FIRST interaction with the user after reading the deliverable. The mode question comes FIRST — before any roster, composition, or configuration.
 
-> If `SESSION.json` already exists for this topic, ask: "Resume or start fresh?"
+1. Read `meta-agent.md`, adopt the Executive Assistant persona.
+2. Determine intent (review / suggest / list / add / promote / remove / custom).
+3. Read the deliverable — files via Read tool, or extract from conversation context.
+4. **FIRST QUESTION — mode selection** (unless `--interactive` or `--standard` flag was passed):
+
+```
+How would you like to run this review?
+1. Standard review — I handle everything and deliver a complete report [recommended]
+2. Interactive session — we configure together, then debate key topics step by step
+```
+
+5. **Wait for the user's answer.** Do not present any roster, composition, or analysis yet.
+6. Mode locked. Write `SESSION.json` checkpoint: `mode_selected` (see `session-schema.md`).
+
+> If `SESSION.json` already exists for this topic, ask: "Resume or start fresh?" before the mode question.
 
 ---
 
-### Phase 1i: PRELIMINARY QUESTIONS (Interactive Only)
+### STANDARD MODE FLOW (Fully Automated)
 
-Skip entirely if standard mode.
+After the user selects Standard mode, the meta agent runs the entire review with ZERO further user input. No roster confirmation, no blind spot questions, no mode questions — just results.
 
-Read `agent-mode.md`. Spawn all committee members as Haiku sub-agents. Each generates 2–3 clarifying questions from their lens. Collect all questions, deduplicate, prioritize by cross-member relevance. Present as a numbered list. User answers or says "skip." Store answers in session context. Write `SESSION.json` checkpoint: `questions_complete`. This phase is skippable by the user at any time.
+#### Phase S1: AUTO-COMPOSE & REPORT
 
----
+1. If a collective was specified: read from `collectives/[id].md`. If suggest: analyze context, read `collectives/_index.md`, find best match.
+2. Resolve pinned members from `favorites/`.
+3. Fill dynamic slots: read `generation-guide.md`, run domain coverage mapping, generate members, validate constraints.
+4. Assign report tiers by deliverable relevance (full / focused / flag-only).
+5. Detect blind spots — auto-add the most critical gap member(s) without asking.
+6. Read `agent-mode.md`. Prepare deliverable context. Construct tiered prompts.
+7. Spawn ALL member sub-agents in a single message (parallel).
+8. Collect reports. Check quorum (60%). If below quorum, retry failed members once automatically, then proceed with what's available.
+9. Write `SESSION.json` checkpoint: `reports_complete`.
 
-### Phase 2i: AGENDA PREVIEW (Interactive Only)
+If `--sequential` flag: adopt each persona in main context sequentially instead of spawning sub-agents.
 
-Skip entirely if standard mode.
+#### Phase S2: SYNTHESIS & NEXT STEPS
 
-Synthesize deliverable + preliminary answers + locked roster → produce a prioritized topic agenda (high / medium / low priority). Present to user for adjustment. Agenda locked on confirmation. Write `SESSION.json` checkpoint: `agenda_complete`.
-
----
-
-### Phase 1: INDIVIDUAL REPORTS (Both Modes)
-
-Read `agent-mode.md`. Prepare the deliverable context. Construct tiered prompts:
-- Full tier → Sonnet sub-agent
-- Focused tier → Sonnet sub-agent
-- Flag-only tier → Haiku sub-agent
-
-If interactive mode: include preliminary answers and locked agenda in each prompt.
-
-Spawn ALL member sub-agents in a single message (parallel by default). Collect reports. Check quorum (60% minimum response). Present reports grouped by tier:
-- 3.1 Full Reports
-- 3.2 Focused Reports
-- 3.3 Flags
-- 3.4 Unavailable Members
-
-Write `SESSION.json` checkpoint: `reports_complete`.
-
-If `--sequential` flag: do not spawn sub-agents. Adopt each persona in main context sequentially, one at a time.
-
----
-
-### Phase 2: SYNTHESIS (Standard) / EXECUTIVE BRIEFING (Interactive)
-
-**Standard Mode:**
-
-Read `review-format.md` and `next-steps-format.md`. Produce complete synthesis:
+Read `review-format.md` and `next-steps-format.md`. Produce the complete output as a single continuous document:
 - Executive Summary
-- Consensus Points (qualitative language, agreement counts)
-- Key Tensions (position / counter / rebuttal / committee note)
-- Evidence & Benchmarks
-- Blind Spots
-- Next Steps: Path A (conservative) and Path B (ambitious)
+- Committee Roster (with tiers and any auto-added blind spot members noted)
+- Individual Reports (grouped by tier: Full → Focused → Flags → Unavailable)
+- Synthesis: Consensus Points, Key Tensions, Evidence & Benchmarks
+- Blind Spots & Recommended Additions
+- Next Steps: Path A (full adoption) and Path B (selective adoption with tensions surfaced)
 
-Write `SESSION.json` checkpoint: `synthesis_complete`. Save review to `./committee-review-YYYY-MM-DD-[topic].md`. Proceed to Phase 3.
-
-**Interactive Mode:**
-
-Produce a briefing only: consensus, tensions, blind spots, and proposed debate topics. Offer to add members for any identified blind spots. Write `SESSION.json` checkpoint: `briefing_complete`. Proceed to Phase 2d.
+Write `SESSION.json` checkpoint: `synthesis_complete`. Save review to `./committee-review-YYYY-MM-DD-[topic].md`. Proceed to Phase 3 (Implementation Bridge).
 
 ---
 
-### Phase 2d: INTERACTIVE DEBATE ROUNDS (Interactive Only)
+### INTERACTIVE MODE FLOW (Step-by-Step Configuration)
 
-Skip entirely if standard mode.
+After the user selects Interactive mode, the meta agent walks through each configuration step ONE AT A TIME. Each step is its own message. Lock each answer before moving to the next.
+
+#### Phase I1: ROSTER COMPOSITION
+
+1. If a collective was specified: read from `collectives/[id].md`. If suggest: analyze context, find best match.
+2. Resolve pinned members. Fill dynamic slots (read `generation-guide.md`).
+3. Assign report tiers by deliverable relevance.
+4. **Present the roster** grouped by tier (FULL REPORTS / FOCUSED REPORTS / FLAG-ONLY) with rationale per member.
+5. **Wait for user confirmation.** User may swap members, adjust tiers, or approve.
+6. Roster locked. Write `SESSION.json` checkpoint: `roster_locked`.
+
+#### Phase I2: BLIND SPOT DETECTION
+
+1. Run domain coverage mapping against the locked roster.
+2. **Present gaps** as lettered options under "COVERAGE GAPS DETECTED:".
+3. **Wait for user response.** User types letters to add, "all", or "none".
+4. If members added: generate them, assign tiers, confirm.
+5. Blind spots resolved. Write `SESSION.json` checkpoint: `blindspots_resolved`.
+
+#### Phase I3: COST ESTIMATE & CONFIRMATION
+
+1. Display cost estimate: member count, tier breakdown, estimated sub-agent cost, estimated main context tokens.
+2. **Wait for user to confirm** they're ready to proceed.
+3. Write `SESSION.json` checkpoint: `composition_complete`.
+
+#### Phase I4: PRELIMINARY QUESTIONS
+
+1. Read `agent-mode.md`. Spawn all committee members as Haiku sub-agents. Each generates 2-3 clarifying questions.
+2. Collect, deduplicate, prioritize by cross-member relevance.
+3. **Present as a numbered list.** User answers or says "skip."
+4. Store answers. Write `SESSION.json` checkpoint: `questions_complete`.
+
+This phase is skippable — user can say "skip questions, go to reports."
+
+#### Phase I5: AGENDA PREVIEW
+
+1. Synthesize deliverable + preliminary answers + roster → prioritized topic agenda (high / medium / low priority).
+2. **Present agenda to user.** They can reorder, add, or remove topics.
+3. Agenda locked on confirmation. Write `SESSION.json` checkpoint: `agenda_complete`.
+
+#### Phase I6: INDIVIDUAL REPORTS
+
+1. Read `agent-mode.md`. Prepare deliverable context. Construct tiered prompts.
+2. Include preliminary answers and locked agenda in each prompt.
+3. Spawn ALL member sub-agents in a single message (parallel).
+4. Collect reports. Check quorum (60%). If below quorum, present retry/proceed/abort options.
+5. Present reports grouped by tier: Full → Focused → Flags → Unavailable.
+6. Write `SESSION.json` checkpoint: `reports_complete`.
+
+If `--sequential` flag: adopt each persona in main context sequentially.
+
+#### Phase I7: EXECUTIVE BRIEFING
+
+1. Read all reports. Produce a briefing: consensus areas, key tensions, blind spots, recommended debate topics.
+2. **Present briefing to user.** Offer to add members for any new blind spots.
+3. Present debate agenda (updated with report findings).
+4. Write `SESSION.json` checkpoint: `briefing_complete`.
+
+#### Phase I8: INTERACTIVE DEBATE ROUNDS
 
 Read `debate-format.md`. For each agenda topic in priority order:
-- Check for consensus fast-track (if all relevant members agree with no dissent, present quick confirmation instead of full round)
+- Check for consensus fast-track (if all relevant members agree, present quick confirmation)
 - Run full debate round if needed
-- Checkpoint after each round
+- **Checkpoint after each round** — wait for user response
 - Write `SESSION.json` per round: `debate_round_N`
 
-After all rounds or user exits debate: produce FULL synthesis (same structure as standard mode, enriched with debate proceedings). Save review to `./committee-review-YYYY-MM-DD-[topic].md`. Write `SESSION.json` checkpoint: `synthesis_complete`. Proceed to Phase 3.
+After all rounds or user exits: produce FULL synthesis (same structure as standard, enriched with debate proceedings). Save review to `./committee-review-YYYY-MM-DD-[topic].md`. Write `SESSION.json` checkpoint: `synthesis_complete`. Proceed to Phase 3.
 
 ---
 
