@@ -5,7 +5,7 @@ description: Multi-perspective committee reviews with curated expert personas an
 
 # Committee Review System
 
-Assemble and run expert committee reviews on any deliverable. Committees consist of curated favorite members and dynamically generated experts who each produce independent analytical reports, followed by a synthesized report with consensus, debate, and recommendations.
+Assemble and run expert committee reviews on any deliverable. An Executive Assistant meta agent orchestrates the experience — composing the committee, managing parallel reports, facilitating optional debates, and producing actionable next steps with an implementation bridge.
 
 ## Invocation
 
@@ -14,15 +14,15 @@ This skill is invoked via `/committee`. Parse the first word after `/committee` 
 | Input | Action |
 |-------|--------|
 | `/committee` (no args) | Show available collectives from `collectives/_index.md` + quick options menu |
-| `/committee review [collective-id]` | Start a review with the named collective. If no collective-id, ask which one or offer to suggest. |
-| `/committee suggest` | Analyze the current conversation context, recommend the best collective, fill dynamic slots, present roster for confirmation |
-| `/committee list` | Read and display `collectives/_index.md` and `favorites/_index.md` |
-| `/committee list [collective-id]` | Read the named collective file and display its full roster with pinned members and slot constraints |
-| `/committee add` | Ask the user to describe a new member. Generate a ~120-word persona following `generation-guide.md`, save to `favorites/`, update `favorites/_index.md` |
-| `/committee add "[description]"` | Generate member from the quoted description in one step, save to `favorites/`, update `favorites/_index.md` |
-| `/committee promote [name]` | Find the named dynamic member from the most recent committee review in this conversation. Save its persona definition as a new file in `favorites/`, update `favorites/_index.md`, log in `history/promoted-members.md` |
-| `/committee remove [name]` | Delete the named member file from `favorites/`, remove its entry from `favorites/_index.md` |
-| `/committee custom [member-ids] [--add-members N]` | Assemble ad-hoc committee from listed favorite IDs + N dynamic slots |
+| `/committee review [collective-id]` | Start review with named collective. If no id, ask or offer suggest. |
+| `/committee suggest` | Analyze context, recommend collective, present roster |
+| `/committee list` | Display `collectives/_index.md` and `favorites/_index.md` |
+| `/committee list [collective-id]` | Display named collective's full roster |
+| `/committee add` | Ask for member description, generate, save to favorites |
+| `/committee add "[description]"` | Generate from quoted description, save |
+| `/committee promote [name]` | Save dynamic member to favorites, log in history |
+| `/committee remove [name]` | Delete from favorites |
+| `/committee custom [member-ids] [--add-members N]` | Ad-hoc committee |
 
 ### Flags
 
@@ -30,92 +30,145 @@ Parse these flags from anywhere in the invocation:
 
 | Flag | Effect |
 |------|--------|
-| `--parallel` | Execute in agent mode — read `agent-mode.md` for instructions |
-| `--quick` | Set report length to ~150 words per member |
-| `--deep` | Set report length to ~600+ words per member, more evidence, more debate rounds in synthesis |
-| `--focus "[topic]"` | Instruct all members to concentrate their analysis on the quoted topic |
-| `--add-members N` | Add N extra dynamic slots beyond the collective's default count |
+| `--interactive` | Select interactive mode. Skips mode question. |
+| `--standard` | Select standard mode (default). Skips mode question. |
+| `--implement` | Auto-chain into writing-plans after review. Dry-run preview. |
+| `--parallel` | No-op (now default). Backward compat. |
+| `--sequential` | Opt out of parallel reports. Run in main context. |
+| `--quick` | ~150 words per member |
+| `--deep` | ~600+ words, more evidence, more debate |
+| `--focus "[topic]"` | Concentrate on quoted topic |
+| `--add-members N` | Add N extra dynamic slots |
+
+## Meta Agent
+
+Read `meta-agent.md` before starting any review. Adopt the Executive Assistant persona for the entire session.
 
 ## Orchestration Flow
 
-### Phase 1: ROUTE
+---
 
-Parse the user's input to determine intent (review, suggest, list, add, promote, remove, custom). If ambiguous, default to `review` and ask which collective.
+### Phase 0: INTAKE & COMPOSITION (Both Modes)
 
-### Phase 2: ASSEMBLE
+1. Read `meta-agent.md`, adopt the Executive Assistant persona
+2. Determine intent (review / suggest / list / add / promote / remove / custom)
+3. Read the deliverable — files via Read tool, or extract from conversation context
+4. If a collective was specified: read its file from `collectives/[id].md`
+5. If suggest: analyze context to identify what the user is building, read `collectives/_index.md`, find best match
+6. Resolve pinned members from `favorites/` for each pinned ID in the collective
+7. Fill dynamic slots: read `generation-guide.md`, run domain coverage mapping, generate members following the ~120-word template, validate against slot constraints
+8. Assign report tiers by deliverable relevance: full / focused / flag-only
+9. Detect blind spots using domain coverage mapping
+10. Display cost estimate (member count, tiers, mode)
+11. Present roster grouped by tier + blind spot additions as lettered options
+12. Wait for user confirmation — user may swap, adjust, or add members
+13. Roster locked
+14. Ask mode selection (unless `--interactive` or `--standard` flag was passed):
+    - "1. Standard [recommended]  2. Interactive"
+15. Mode locked
+16. Write `SESSION.json` checkpoint: `composition_complete` (see `session-schema.md` for schema)
 
-1. **If a collective was specified:** Read the collective file from `collectives/[id].md`
-2. **If "suggest" was used:** Analyze the current conversation to identify what the user has been building/working on. Read `collectives/_index.md` to find the best-matching collective. Read its file.
-3. **If "custom" was used:** Parse the listed member IDs. Set dynamic slot count from `--add-members` flag (default 0 if not specified).
-4. **Resolve pinned members:** For each pinned member ID in the collective, read its file from `favorites/[id].md`
-5. **Fill dynamic slots:** Read `generation-guide.md`. For each dynamic slot:
-   - Analyze the deliverable (what is it, what domain, what stage, target audience)
-   - Identify what perspectives are missing from the pinned roster
-   - Generate a member following the ~120-word template in `generation-guide.md`
-   - Validate against the collective's slot constraints (archetype balance, industry match, no overlap)
-6. **Present the full roster** to the user showing: member name, company anchor, archetype, and a one-line description for each. Clearly label which are pinned favorites and which are dynamically generated.
+> If `SESSION.json` already exists for this topic, ask: "Resume or start fresh?"
 
-### Phase 3: CONFIRM
+---
 
-Wait for the user to confirm the roster. They may:
-- Say "run it" or equivalent → proceed to Execute
-- Say "run it --parallel" → proceed to Execute in agent mode
-- Request swaps → adjust the roster, re-present, wait for confirmation
-- Request additions → add more dynamic slots, generate, re-present
+### Phase 1i: PRELIMINARY QUESTIONS (Interactive Only)
 
-### Phase 4 + 5: EXECUTE AND SYNTHESIZE (single continuous output)
+Skip entirely if standard mode.
 
-Read `review-format.md` for the output template. **Phases 4 and 5 are ONE continuous output. Do NOT restart, repeat, or regenerate any section. Once an individual report is written, move to the next member. Once all members are done, move directly to the Synthesized Report. Never go back.**
+Read `agent-mode.md`. Spawn all committee members as Haiku sub-agents. Each generates 2–3 clarifying questions from their lens. Collect all questions, deduplicate, prioritize by cross-member relevance. Present as a numbered list. User answers or says "skip." Store answers in session context. Write `SESSION.json` checkpoint: `questions_complete`. This phase is skippable by the user at any time.
 
-**Default mode (no --parallel flag):**
+---
 
-For each member in the roster, in order:
-1. Adopt the member's persona (use the full persona definition from their file or from dynamic generation)
-2. Analyze the deliverable through that persona's specific lens
-3. Produce the individual report following the format in `review-format.md`
-4. Present the individual report under a header with the member's name
+### Phase 2i: AGENDA PREVIEW (Interactive Only)
 
-Important: Between members, consciously reset your perspective. Each member must analyze independently — do not reference or build on previous members' reports during individual report generation.
+Skip entirely if standard mode.
 
-**Parallel mode (--parallel flag):**
+Synthesize deliverable + preliminary answers + locked roster → produce a prioritized topic agenda (high / medium / low priority). Present to user for adjustment. Agenda locked on confirmation. Write `SESSION.json` checkpoint: `agenda_complete`.
 
-Read `agent-mode.md` for detailed instructions on spawning subagents.
+---
 
-**After ALL individual reports are complete, proceed DIRECTLY to the Synthesized Report.** Do NOT re-read review-format.md or restart the output. Produce the synthesis as a continuation of the same output:
+### Phase 1: INDIVIDUAL REPORTS (Both Modes)
 
-1. **Consensus Points:** Identify issues/observations where 60%+ of members converge. Count agreement and note it as [N]/[total].
-2. **Key Tensions:** Find areas where members meaningfully disagree. For each tension:
-   - State Member A's position with rationale
-   - State Member B's counter-position with rationale
-   - Give Member A one rebuttal turn
-   - Give Member B one rebuttal turn
-   - Add a Committee Note: is this resolved or a genuine tradeoff the user must decide?
-3. **Top Recommendations:** Rank by (consensus strength × projected impact). Include agreement count, expected impact, and complexity rating (low/medium/high).
-4. **Blind Spots Acknowledged:** What this committee is NOT qualified to evaluate. What perspectives are missing. What the user should seek input on elsewhere.
+Read `agent-mode.md`. Prepare the deliverable context. Construct tiered prompts:
+- Full tier → Sonnet sub-agent
+- Focused tier → Sonnet sub-agent
+- Flag-only tier → Haiku sub-agent
 
-### Phase 6: SAVE REPORT
+If interactive mode: include preliminary answers and locked agenda in each prompt.
 
-After the synthesis is complete, save the ENTIRE review (individual reports + synthesized report) as a markdown file in the current project directory:
+Spawn ALL member sub-agents in a single message (parallel by default). Collect reports. Check quorum (60% minimum response). Present reports grouped by tier:
+- 3.1 Full Reports
+- 3.2 Focused Reports
+- 3.3 Flag-Only Notes
+- 3.4 Blind Spot Additions
 
-1. **File path:** `./committee-review-YYYY-MM-DD-[short-topic].md` in the current working directory. Derive `[short-topic]` from the deliverable (e.g., `committee-review-2026-04-07-landing-page.md`).
-2. **Use the Write tool** to save the full report content.
-3. **Confirm to the user:** "Report saved to `[file path]`"
+Write `SESSION.json` checkpoint: `reports_complete`.
 
-### Phase 7: FOLLOW-UP
+If `--sequential` flag: do not spawn sub-agents. Adopt each persona in main context sequentially, one at a time.
 
-After the review is complete, the user may:
-- Ask a specific member to elaborate on a point → re-adopt that persona and expand
-- Say "promote the [name] member" → save dynamic member to favorites
-- Ask for a re-review after making changes → re-run with the same roster
-- Invoke a different collective for a different angle on the same deliverable
+---
+
+### Phase 2: SYNTHESIS (Standard) / EXECUTIVE BRIEFING (Interactive)
+
+**Standard Mode:**
+
+Read `review-format.md` and `next-steps-format.md`. Produce complete synthesis:
+- Executive Summary
+- Consensus Points (qualitative language, agreement counts)
+- Key Tensions (position / counter / rebuttal / committee note)
+- Evidence & Benchmarks
+- Blind Spots
+- Next Steps: Path A (conservative) and Path B (ambitious)
+
+Write `SESSION.json` checkpoint: `synthesis_complete`. Save review to `./committee-review-YYYY-MM-DD-[topic].md`. Proceed to Phase 3.
+
+**Interactive Mode:**
+
+Produce a briefing only: consensus, tensions, blind spots, and proposed debate topics. Offer to add members for any identified blind spots. Write `SESSION.json` checkpoint: `briefing_complete`. Proceed to Phase 2d.
+
+---
+
+### Phase 2d: INTERACTIVE DEBATE ROUNDS (Interactive Only)
+
+Skip entirely if standard mode.
+
+Read `debate-format.md`. For each agenda topic in priority order:
+- Check for consensus fast-track (if 80%+ agreement, skip full round)
+- Run full debate round if needed
+- Checkpoint after each round
+- Write `SESSION.json` per round: `debate_round_[N]_complete`
+
+After all rounds or user exits debate: produce FULL synthesis (same structure as standard mode, enriched with debate proceedings). Save review to `./committee-review-YYYY-MM-DD-[topic].md`. Write `SESSION.json` checkpoint: `synthesis_complete`. Proceed to Phase 3.
+
+---
+
+### Phase 3: IMPLEMENTATION BRIDGE (Both Modes)
+
+Read `next-steps-format.md` for handoff protocol. Present 4 options:
+
+1. Create implementation plan → writing-plans
+2. Save report and stop
+3. Revisit recommendations
+4. Ask a member to elaborate
+
+If `--implement` flag: skip directly to option 1 (still show dry-run preview first).
+
+If option 1: compile approved next-step items, show dry-run preview, wait for confirmation, invoke writing-plans skill, then offer executing-plans skill.
+
+If option 4: re-adopt that member's persona, produce elaboration, then re-present the 4 options.
+
+Write `SESSION.json` checkpoint: `bridge_complete`.
+
+---
 
 ## Report Length by Mode
 
-| Mode | Individual Report Length | Synthesis Detail |
-|------|------------------------|-----------------|
-| `--quick` | ~150 words per member | Consensus + top 3 recommendations only |
-| default | ~300-500 words per member | Full synthesis with tensions and debate |
-| `--deep` | ~600+ words per member | Extended synthesis, more debate rounds, additional evidence |
+| Mode | Individual Length | Synthesis Detail |
+|------|-------------------|-----------------|
+| `--quick` | ~150w | Consensus + top 3 only |
+| default | ~300-500w (full), ~200w (focused), ~50w (flag) | Full synthesis + two-path next steps |
+| `--deep` | ~600+w (full), ~300w (focused), ~100w (flag) | Extended synthesis, more debate, more evidence |
 
 ## Deliverable Context
 
