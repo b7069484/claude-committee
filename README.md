@@ -21,10 +21,7 @@ Each member produces a full report with executive assessment, key issues (backed
 ### First-Time Install
 
 ```bash
-# Step 1: Add the marketplace
-claude plugin marketplace add github:b7069484/claude-committee
-
-# Step 2: Install the plugin
+claude plugin marketplace add b7069484/claude-committee
 claude plugin install committee
 ```
 
@@ -32,18 +29,9 @@ Start a new Claude Code session and type `/committee` — you'll see all availab
 
 ### Updating to v2
 
-If you already have Committee installed:
-
 ```bash
+claude plugin marketplace update claude-committee
 claude plugin update committee
-```
-
-If that doesn't work, reinstall:
-
-```bash
-claude plugin uninstall committee
-claude plugin marketplace update
-claude plugin install committee
 ```
 
 All your favorites and collectives carry over. v2 is fully backward compatible — every v1 command works exactly as before, with new features layered on top.
