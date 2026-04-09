@@ -70,21 +70,29 @@ How would you like to run this review?
 
 ---
 
-### STANDARD MODE FLOW (Fully Automated)
+### STANDARD MODE FLOW
 
-After the user selects Standard mode, the meta agent runs the entire review with ZERO further user input. No roster confirmation, no blind spot questions, no mode questions — just results.
+After the user selects Standard mode, the meta agent composes the committee, presents it for ONE confirmation, then runs the entire review automatically from there.
 
-#### Phase S1: AUTO-COMPOSE & REPORT
+#### Phase S1: COMPOSE & CONFIRM ROSTER
 
 1. If a collective was specified: read from `collectives/[id].md`. If suggest: analyze context, read `collectives/_index.md`, find best match.
 2. Resolve pinned members from `favorites/`.
 3. Fill dynamic slots: read `generation-guide.md`, run domain coverage mapping, generate members, validate constraints.
 4. Assign report tiers by deliverable relevance (full / focused / flag-only).
-5. Detect blind spots — auto-add the most critical gap member(s) without asking.
-6. Read `agent-mode.md`. Prepare deliverable context. Construct tiered prompts.
-7. Spawn ALL member sub-agents in a single message (parallel).
-8. Collect reports. Check quorum (60%). If below quorum, retry failed members once automatically, then proceed with what's available.
-9. Write `SESSION.json` checkpoint: `reports_complete`.
+5. Detect blind spots — include the most critical gap member(s) in the proposal.
+6. **Present the full proposed roster** grouped by tier (FULL REPORTS / FOCUSED REPORTS / FLAG-ONLY), with blind spot additions marked. Include cost estimate.
+7. **Wait for user confirmation.** User can approve, swap members, adjust tiers, or add/remove members. This is the ONLY question in standard mode.
+8. Roster locked. Write `SESSION.json` checkpoint: `roster_locked`.
+
+#### Phase S2: AUTO-REPORT (No Further User Input)
+
+Everything from here is fully automated — no more questions.
+
+1. Read `agent-mode.md`. Prepare deliverable context. Construct tiered prompts.
+2. Spawn ALL member sub-agents in a single message (parallel).
+3. Collect reports. Check quorum (60%). If below quorum, retry failed members once automatically, then proceed with what's available.
+4. Write `SESSION.json` checkpoint: `reports_complete`.
 
 If `--sequential` flag: adopt each persona in main context sequentially instead of spawning sub-agents.
 
