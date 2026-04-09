@@ -2,61 +2,98 @@
 
 ## When This Is Used
 
-This file is read by the orchestrator when the `--parallel` flag is present. It replaces the default sequential execution with parallel subagent spawning.
+Parallel execution is now the **DEFAULT**. The `--parallel` flag is a no-op (accepted but ignored). To opt out, use `--sequential`.
 
-## Why Agent Mode Exists
-
-In default mode, all members "speak" within the same context window. This means:
-- Later members may be subtly influenced by earlier members' reports
-- Perspectives can bleed together
-- The committee doesn't produce truly independent analyses
-
-Agent mode solves this by spawning each member as a separate subagent. Each subagent has its own context and literally cannot see the other members' work.
-
-## Execution Instructions
-
-### Step 1: Prepare the Deliverable Content
-
-Before spawning agents, the orchestrator must prepare the deliverable as a self-contained text block:
-
-- **If the deliverable is files** (HTML, code, documents): Read each file using the Read tool. Include the full content in the agent prompt.
-- **If the deliverable is a concept from conversation**: Write a comprehensive summary (500-1000 words) capturing: what it is, who it's for, what problem it solves, current state/stage, key decisions already made.
-- **If mixed**: Include both file contents and a context summary.
-
-### Step 2: Construct the Agent Prompt
-
-For each committee member, construct this prompt:
+This file is read by the orchestrator whenever it spawns committee members as sub-agents, which is the standard execution path.
 
 ---
 
+## Why Parallel Execution
+
+Each committee member is spawned as a separate sub-agent with its own context window. Sub-agents **cannot see each other's work** — they are isolated by design. This ensures:
+
+- Genuine independence of perspective
+- No bleeding between expert voices
+- Later reviewers are not anchored to earlier reviewers
+- The committee reflects true multi-perspective analysis, not consensus drift
+
+---
+
+## Model Tiering
+
+Different tasks use different models to balance quality and cost.
+
+| Task | Parameter | Model |
+|---|---|---|
+| Full individual report | `model: "sonnet"` | claude-sonnet |
+| Focused individual report | `model: "sonnet"` | claude-sonnet |
+| Flag-only scan | `model: "haiku"` | claude-haiku |
+| Preliminary question generation | `model: "haiku"` | claude-haiku |
+| Dynamic member generation | `model: "haiku"` | claude-haiku |
+
+Tier names (Full, Focused, Flag) are surfaced to the user. Model names are not.
+
+---
+
+## Individual Report Sub-Agents (Phase 1)
+
+### Step 1: Prepare Deliverable
+
+Before spawning agents, the orchestrator prepares the deliverable as a self-contained text block. Sub-agents cannot access the parent conversation, so everything they need must be embedded in their prompt.
+
+- **Files**: Use the Read tool on each file. Include full file contents verbatim.
+- **Concept**: Write a 500–1000 word summary capturing: what it is, who it's for, the problem it solves, the current stage, and key decisions already made.
+- **Mixed**: Include both file contents and a context summary.
+
+---
+
+### Step 2: Construct Agent Prompt
+
+Three separate prompt templates are used depending on the member's assigned tier.
+
+#### a) Full Report Prompt
+
+```
 You are conducting an independent expert review. You are the ONLY reviewer — do not reference or anticipate other reviewers.
 
 ## Your Persona
 
-[Insert the full ~120-word persona definition here — either from the favorites file or from dynamic generation]
+[Insert the full ~120-word persona definition here — from the favorites file or from dynamic generation]
 
 ## Deliverable to Review
 
 [Insert the deliverable content prepared in Step 1]
 
-[If --focus flag is set: "FOCUS: Concentrate your analysis specifically on: [focus topic]. You may note other issues briefly but your primary analysis should address the focused topic."]
+[IF --interactive and preliminary answers were collected:]
+## Preliminary Context
+
+The following clarifying information was provided before the review:
+[Insert deduped Q&A pairs]
+
+[IF --interactive and an agenda was set:]
+## Agenda
+
+The review should address the following agenda items:
+[Insert agenda]
+
+[IF --focus flag is set:]
+FOCUS: Concentrate your analysis specifically on: [focus topic]. You may note other issues briefly, but your primary analysis should address this topic.
 
 ## Report Format
 
 Produce your review in exactly this structure:
 
-**Executive assessment:** [2-3 sentences — your overall verdict]
+**Executive assessment:** [2–3 sentences — your overall verdict on the deliverable]
 
 **Key issues identified:**
 - [Issue] — [Detailed rationale with evidence, case studies, or benchmarks]
-[Aim for [2-4 issues in default | 1-2 in --quick | 4-6 in --deep] issues]
+[Aim for 2–4 issues]
 
 **Suggestions & opportunities:**
-- [Suggestion] — [Why it works, with specific benchmark]
-[Aim for [2-3 in default | 1-2 in --quick | 3-5 in --deep] suggestions]
+- [Suggestion] — [Why it works, with a specific benchmark or reference]
+[Aim for 2–3 suggestions]
 
-**What I'd ship instead:** [Concrete alternative — what would your team at [Company] actually build?]
-[Length: [1-2 paragraphs default | 2-3 sentences --quick | detailed counter-proposal --deep]]
+**What I'd ship instead:** [1–2 paragraphs — what would your team at [Company] actually build? Concrete alternative, not just critique.]
 
 ## Rules
 
@@ -64,33 +101,139 @@ Produce your review in exactly this structure:
 - Reference your company's products and standards naturally
 - Be specific and actionable — no vague advice
 - Propose alternatives, don't just critique
+```
+
+#### b) Focused Report Prompt
+
+```
+You are conducting an independent expert review. You are the ONLY reviewer — do not reference or anticipate other reviewers.
+
+## Your Persona
+
+[Insert the full ~120-word persona definition here]
+
+## Deliverable to Review
+
+[Insert the deliverable content prepared in Step 1]
+
+[IF --interactive and preliminary answers were collected:]
+## Preliminary Context
+
+[Insert deduped Q&A pairs]
+
+[IF --focus flag is set:]
+FOCUS: Concentrate your analysis on: [focus topic].
+
+## Report Format
+
+Produce your review in exactly this structure:
+
+**Executive assessment:** [2–3 sentences — your overall verdict]
+
+**Top 2 issues through your lens:**
+- [Issue] — [Rationale and evidence]
+- [Issue] — [Rationale and evidence]
+
+**One key suggestion:** [Your single most important recommendation, with a benchmark or reference]
+```
+
+#### c) Flag-Only Prompt
+
+```
+You are a specialist reviewer. Your specialty: [one-line description of this member's domain].
+
+## Deliverable
+
+[Insert the deliverable content prepared in Step 1]
+
+## Instructions
+
+If you identify a meaningful issue within your specialty area, FLAG it with a brief description (1–3 sentences). If you find no issues, respond with exactly: "No [specialty] concerns."
+
+Keep your response under 50 words.
+```
 
 ---
 
-### Step 3: Spawn Agents in Parallel
+### Step 3: Spawn All Agents in a Single Message
 
-Use the Agent tool to spawn ALL member agents simultaneously in a single message. This is critical — spawning them in one message enables true parallel execution.
+Use the Agent tool to spawn ALL member agents simultaneously. Do not spawn them one at a time — they must all appear in a single message to enable true parallel execution.
 
-Example (for a 3-member committee):
+Set `description="Committee: [Name]"` for each agent so the user can track them.
 
-Use Agent tool three times in a single response:
-- Agent 1: prompt=[Member 1's full prompt from Step 2], description="Committee: [Member 1 name]"
-- Agent 2: prompt=[Member 2's full prompt from Step 2], description="Committee: [Member 2 name]"
-- Agent 3: prompt=[Member 3's full prompt from Step 2], description="Committee: [Member 3 name]"
+Apply model tiering:
+- Full report members: `model="sonnet"`
+- Focused report members: `model="sonnet"`
+- Flag-only members: `model="haiku"`
 
-For committees of 8-10 members, spawn all 8-10 agents in a single message.
+Example for a 3-member committee (one of each tier):
 
-### Step 4: Collect and Present
+```
+Agent tool call 1: prompt=[Full Report Prompt for Member A], description="Committee: Member A", model="sonnet"
+Agent tool call 2: prompt=[Focused Report Prompt for Member B], description="Committee: Member B", model="sonnet"
+Agent tool call 3: prompt=[Flag-Only Prompt for Member C], description="Committee: Member C", model="haiku"
+```
 
-Once all agents return their reports:
+For larger committees, spawn all agents in the same single message regardless of count.
 
-1. Present each report under a header: `### [Number]. [Member Name]`
-2. After all individual reports are presented, proceed to Phase 5 (Synthesize) in the main context
-3. The synthesis is always done by the orchestrator (main context), NOT by a subagent — because synthesis requires seeing all reports together
+---
 
-### Important Notes
+### Step 4: Collect, Check Quorum, and Present
 
-- **Never spawn agents sequentially.** The whole point of agent mode is parallel execution. All agents must be spawned in a single message.
-- **Subagents cannot see each other.** This is a feature, not a bug. It ensures genuine independence.
-- **The deliverable must be self-contained** in each agent's prompt. Subagents cannot access the parent conversation context.
-- **Agent mode costs more tokens.** Each member gets its own full context. For a 10-member committee, this means roughly 10x the token usage of default mode. This is expected and acceptable when the user explicitly opts into `--parallel`.
+Once all agents return:
+
+1. **Check quorum**: At least 60% of spawned agents must return a substantive result. See `session-schema.md` for the quorum threshold definition. If quorum is not met, surface a warning before presenting results.
+
+2. **Present results grouped by tier**:
+   - `### 3.1 Full Reports`
+   - `### 3.2 Focused Reports`
+   - `### 3.3 Flags`
+   - `### 3.4 Unavailable` (members whose agents failed or returned empty)
+
+3. **Fallback stubs**: For any failed agent, insert a stub under 3.4:
+   ```
+   **[Member Name]** — Report unavailable (agent did not return a result).
+   ```
+
+4. **Update SESSION.json** with the results and quorum status before proceeding to synthesis.
+
+5. After all reports are presented, proceed to Phase 5 (Synthesize) in the main context. Synthesis is always done by the orchestrator — never by a sub-agent.
+
+---
+
+## Preliminary Questions Sub-Agents (Phase 1i — Interactive Only)
+
+When `--interactive` mode is active, preliminary questions are collected before reports are written.
+
+### Prompt Template
+
+```
+You are a subject-matter expert preparing to review a deliverable. Your specialty: [persona description — name, company, domain].
+
+## Deliverable
+
+[Insert the deliverable content prepared in Step 1]
+
+## Instructions
+
+Before writing your full review, generate 2–3 clarifying questions — questions whose answers would meaningfully change your analysis. Focus on information gaps, ambiguities, or decisions that aren't visible in the deliverable itself.
+
+Format your response as a numbered list:
+1. [Question]
+2. [Question]
+3. [Question] (optional)
+```
+
+### Execution
+
+Spawn all preliminary question agents as a single message using `model="haiku"`. Collect all responses and return them to the meta agent for deduplication before presenting to the user.
+
+---
+
+## Important Notes
+
+- **All sub-agents must be spawned in a single message.** Never spawn them sequentially. Sequential spawning defeats the purpose of parallel execution.
+- **Sub-agents cannot see each other.** This is a feature, not a bug. It ensures genuine independence of perspective.
+- **The deliverable must be self-contained in each prompt.** Sub-agents have no access to the parent conversation context.
+- **The meta agent always produces the synthesis.** Never delegate synthesis to a sub-agent — synthesis requires seeing all reports together, which only the orchestrator can do.
+- **Model tiering is invisible to the user.** Users see tier names (Full, Focused, Flag) — they do not see model names.
