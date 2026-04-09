@@ -18,27 +18,60 @@ Each member produces a full report with executive assessment, key issues (backed
 
 ## Quick Start
 
-### Install
+### First-Time Install
 
 ```bash
-claude plugin marketplace add b7069484/claude-committee
-claude plugin install committee
+claude plugin add github:b7069484/claude-committee
 ```
 
-### Use
+That's it. Start a new Claude Code session and type `/committee` — you'll see all available commands in autocomplete.
+
+### Updating from v1
+
+If you already have Committee installed:
 
 ```bash
-# Show available collectives
-/committee
+claude plugin remove committee
+claude plugin add github:b7069484/claude-committee
+```
 
-# Auto-suggest the best committee for what you're working on
-/committee suggest
+All your favorites and collectives carry over. v2 is fully backward compatible — every v1 command works exactly as before, with new features layered on top.
 
-# Run a specific collective
-/committee review sales-marketing-review
+### Your First Review
 
-# Assemble a custom panel
-/committee custom apple-uiux-head, skeptic-end-user, mckinsey-strategy-head --add-members 3
+```bash
+# Option 1: Let the Executive Assistant suggest the right committee
+/committee:suggest
+
+# Option 2: Start a review directly
+/committee:review
+
+# Option 3: Pick a specific collective
+/committee:review sales-marketing-review
+```
+
+The Executive Assistant will ask one question: **Standard or Interactive?**
+
+- **Standard** (recommended for most reviews): you confirm the roster, then the EA handles everything — parallel reports, synthesis, actionable next steps. Done.
+- **Interactive**: step-by-step configuration with preliminary questions, agenda preview, and topic-based debates where you can steer the discussion.
+
+### More Examples
+
+```bash
+# Browse all available expert panels and personas
+/committee:list
+
+# Assemble a custom panel from specific experts
+/committee:custom apple-uiux-head,skeptic-end-user,mckinsey-strategy-head --add-members 3
+
+# Create your own expert persona
+/committee:add "Head of QA at Netflix"
+
+# Deep review focused on security
+/committee:review --deep --focus "security architecture"
+
+# Auto-chain into implementation planning after the review
+/committee:review --implement
 ```
 
 ## What's Included
@@ -92,16 +125,17 @@ Parallel execution is now the default — each committee member runs as an indep
 
 ## Commands
 
+All commands appear in Claude Code's autocomplete when you type `/committee`:
+
 | Command | Action |
 |---------|--------|
-| `/committee` | Show available collectives |
-| `/committee review [id]` | Run a review with a specific collective |
-| `/committee suggest` | Auto-recommend collective for current context |
-| `/committee list` | Show all collectives and favorites |
-| `/committee custom [ids]` | Assemble ad-hoc from favorites |
-| `/committee add "[desc]"` | Create a new favorite member |
-| `/committee promote [name]` | Save a dynamic member to favorites |
-| `/committee remove [name]` | Delete a favorite |
+| `/committee` | Show available collectives and quick options menu |
+| `/committee:review [id]` | Start a review — choose Standard or Interactive mode |
+| `/committee:suggest` | Auto-recommend the best collective for your current context |
+| `/committee:list [id]` | Browse all collectives and personas (add an id to see a specific roster) |
+| `/committee:custom [ids]` | Assemble an ad-hoc panel from specific expert IDs |
+| `/committee:add "[desc]"` | Create a new expert persona from a description |
+| `/committee:manage` | Promote dynamic members to favorites, remove members, or browse your roster |
 
 ### Flags
 
