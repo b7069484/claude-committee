@@ -2,6 +2,8 @@
 
 A Claude Code plugin that assembles multi-perspective expert committees to review any deliverable. Each committee member brings a distinct analytical lens anchored to a real company's standards, producing independent reports followed by a synthesized analysis with consensus, debate, and ranked recommendations.
 
+**v2** introduces an Executive Assistant that orchestrates the entire review. The default path is fast: compose → reports → synthesis → actionable next steps. Opt into Interactive mode for preliminary questions, agenda preview, and topic-based debates with checkpoints.
+
 ## What It Does
 
 Type `/committee` in Claude Code and get a structured review from a panel of experts like:
@@ -67,11 +69,13 @@ Each collective has pinned favorites plus dynamic slots that are filled with con
 
 ## How It Works
 
-1. **You invoke** `/committee` with a collective or let it suggest one
-2. **It assembles** the roster - pinned favorites + dynamically generated members tailored to your deliverable
-3. **You confirm** or swap members
-4. **Each member reviews** independently through their specific lens
-5. **A synthesis** surfaces consensus, debates tensions, and ranks recommendations
+1. Invoke `/committee review [collective]` or `/committee suggest`
+2. Executive Assistant proposes committee with tiered report assignments and blind spot detection
+3. Choose: Standard review (fast, recommended) or Interactive session (debates)
+4. Committee members generate independent reports in parallel (Sonnet/Haiku)
+5. Executive Assistant synthesizes: consensus, tensions, evidence, blind spots
+6. Two-path Next Steps: implement everything, or pick unanimous items and review tensions
+7. Implementation Bridge: chain directly into a plan and execution
 
 ### Dynamic Member Generation
 
@@ -79,10 +83,11 @@ Collectives have "open slots" that get filled with experts generated specificall
 
 ### Parallel Mode
 
-Add `--parallel` to spawn each committee member as an independent subagent. They literally cannot see each other's work, producing genuinely independent perspectives.
+Parallel execution is now the default — each committee member runs as an independent subagent and cannot see each other's work, producing genuinely independent perspectives. The `--parallel` flag is kept for backward compatibility but is a no-op. Use `--sequential` to opt out and run all members in the main context (v1 behavior).
 
 ```bash
-/committee suggest --parallel --deep
+/committee suggest --deep
+/committee suggest --sequential  # opt out of parallel
 ```
 
 ## Commands
@@ -102,11 +107,27 @@ Add `--parallel` to spawn each committee member as an independent subagent. They
 
 | Flag | Effect |
 |------|--------|
-| `--parallel` | Independent subagent per member |
+| `--parallel` | Now default. Kept for backward compatibility. |
+| `--sequential` | Opt out of parallel (run in main context like v1) |
+| `--interactive` | Select interactive mode (debates, preliminary questions) |
+| `--standard` | Select standard mode (default fast path) |
+| `--implement` | Chain into implementation planning after review |
 | `--quick` | Shorter reports (~150 words/member) |
 | `--deep` | Detailed reports (~600+ words/member) |
 | `--focus "[topic]"` | Focus analysis on specific aspect |
 | `--add-members N` | Add extra dynamic slots |
+
+## What's New in v2
+
+- **Executive Assistant** — a meta agent orchestrates the entire review with crisp, structured interaction
+- **Two modes** — Standard (fast, default) and Interactive (debates, opt-in)
+- **Model tiering** — Haiku for probes, Sonnet for reports, preserving your main context
+- **Blind spot detection** — domain coverage mapping identifies missing perspectives
+- **Tiered report depth** — full, focused, or flag-only based on deliverable relevance
+- **Two-path Next Steps** — unanimous items ready to act + contentious tensions surfaced for your decision
+- **Implementation Bridge** — chain approved recommendations directly into implementation planning with `--implement`
+- **Session checkpoints** — reviews are resumable and auditable via SESSION.json
+- **Failure handling** — sub-agent timeouts, quorum enforcement, graceful degradation
 
 ## Research Basis
 
